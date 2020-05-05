@@ -1,0 +1,37 @@
+<mat-spinner *ngIf="isPending" class="form__spinner"></mat-spinner>
+
+<h2 mat-dialog-title align="center"> {{ data.modalTitle }} </h2>
+<mat-dialog-content>
+  <form [formGroup]="formNewTodo" (ngSubmit)="onSubmit()">
+    <p>
+      <mat-form-field appearance="fill" class="input__task">
+        <mat-label>Your task:</mat-label>
+        <textarea matInput required form formControlName="task"></textarea>
+        <mat-error *ngIf="formNewTodo.get('task').invalid"> {{ getErrorMessageTask() }} </mat-error>
+      </mat-form-field>
+    </p>
+
+    <div class="input__wrapper">
+      <mat-form-field class="input__name">
+        <mat-label>Your name:</mat-label>
+        <input matInput required formControlName="name">
+        <mat-error *ngIf="formNewTodo.get('name').invalid"> {{ getErrorMessageName() }} </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="input__deadline">
+        <mat-label>Choose a deadline date:</mat-label>
+        <input matInput [min]="minDate" [matDatepicker]="deadline"
+               required formControlName="deadline" placeholder="mm/dd/yy">
+        <mat-error *ngIf="formNewTodo.get('deadline').invalid"> Enter the correct date (mm/dd/yy) </mat-error>
+        <mat-datepicker-toggle matSuffix [for]="deadline"></mat-datepicker-toggle>
+        <mat-datepicker #deadline [disabled]="isPending"></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <mat-error align="center" *ngIf="!successSubmitted"> We can't save your task now, please try again later </mat-error>
+    <div class="form__btn-wrapper">
+      <button mat-raised-button mat-dialog-close class="form__btn" [disabled]="isPending"> Cancel </button>
+      <button mat-raised-button type="submit" [disabled]="formNewTodo.invalid || isPending"> Submit </button>
+    </div>
+  </form>
+</mat-dialog-content>

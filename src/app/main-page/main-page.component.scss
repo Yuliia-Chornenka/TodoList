@@ -1,0 +1,35 @@
+.search {
+  &__input {
+    width: 250px;
+
+    &--field {
+      width: 120px;
+    }
+  }
+}
+
+.filter {
+  &__wrapper {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    &--first-line {
+      justify-content: space-between;
+    }
+
+    &--second-line {
+      justify-content: flex-start;
+      min-height: 35px;
+      margin-bottom: 15px;
+    }
+  }
+
+  &__completed {
+    margin: 10px 10px 10px 0;
+  }
+
+  &__chip-list {
+    margin-left: 20px;
+  }
+}

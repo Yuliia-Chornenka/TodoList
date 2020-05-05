@@ -1,0 +1,43 @@
+<table matSort class="mat-elevation-z8 table" (matSortChange)="sortData($event)">
+  <tr>
+    <th *ngFor="let column of columns" class="table__header"
+        [mat-sort-header]="column">
+      {{ column }}
+    </th>
+    <th class="table__header"> Edit </th>
+    <th class="table__header"> Delete </th>
+  </tr>
+
+  <tr *ngFor="let item of sortedData
+    | search:searchValue:searchFieldName
+    | filter:selectedAuthor:'author'
+    | filter:selectedDeadline:'deadline'
+    | filter:selectedCreationDate:'createdAt'
+    | filter:taskCompleted:'completed'"
+      [class.mat-list-single-selected-option]="item.completed">
+
+    <td>
+      <mat-checkbox class="list__check"
+                    [(ngModel)]="item.completed"
+                    (change)="checkTodo(item)">
+      </mat-checkbox>
+    </td>
+    <td> {{ item.author | titlecase }} </td>
+    <td> {{ item.title }} </td>
+    <td> {{ item.createdAt | date:'longDate' }} </td>
+    <td [class.table__deadline--red]="getDaysToDeadline(today, item.deadline) < 1 && !item.completed">
+      {{ item.deadline | date:'longDate' }}
+    </td>
+
+    <td class="table__btn">
+      <button mat-mini-fab (click)="openDialogEditTodo(item.title, item.deadline, item.author, item.todoId)">
+        <mat-icon> edit </mat-icon>
+      </button>
+    </td>
+    <td class="table__btn">
+      <button mat-mini-fab (click)="deleteTodo(item.todoId)">
+        <mat-icon> delete </mat-icon>
+      </button>
+    </td>
+  </tr>
+</table>

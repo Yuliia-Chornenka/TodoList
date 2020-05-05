@@ -1,0 +1,37 @@
+.form {
+  &__btn {
+    margin-right: 15px;
+
+    &-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 30px 0 5px 0;
+    }
+  }
+  &__spinner {
+    position: absolute;
+    top: 37%;
+    left: 46%;
+  }
+}
+
+.input {
+  &__task {
+    width: 100%;
+  }
+
+  &__name {
+    width: 35%;
+  }
+
+  &__deadline {
+    width: 55%;
+  }
+
+  &__wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}

@@ -1,0 +1,81 @@
+<div class="container">
+
+  <div class="filter__wrapper filter__wrapper--first-line">
+    <div>
+      <mat-form-field class="search__input">
+        <mat-label>Search in '{{ searchFieldName }}' field</mat-label>
+        <input matInput type="text" [(ngModel)]="searchValue">
+        <button mat-button *ngIf="searchValue" matSuffix mat-icon-button (click)="resetSearchInput()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field class="search__input--field">
+        <mat-label>Search in:</mat-label>
+        <mat-select [(value)]="searchFieldName">
+          <mat-option *ngFor="let fieldName of searchedFields" [value]="fieldName">
+            {{ fieldName }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field>
+      <mat-label>Filter by author:</mat-label>
+      <mat-select [(value)]="selectedAuthor">
+        <mat-option *ngFor="let author of authors" [value]="author">
+          {{ author | titlecase }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Filter by creation date:</mat-label>
+      <mat-select [(value)]="selectedCreationDate">
+        <mat-option *ngFor="let creationDate of creationDates" [value]="creationDate">
+          {{ creationDate | date:'longDate' }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Filter by deadline:</mat-label>
+      <mat-select [(value)]="selectedDeadline">
+        <mat-option *ngFor="let deadline of deadlines" [value]="deadline">
+          {{ deadline | date:'longDate' }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" (click)="resetAllFilters()"> Reset all filters</button>
+  </div>
+
+  <div class="filter__wrapper filter__wrapper--second-line">
+    <label id="filter-done-tasks" class="filter__completed">Tasks:</label>
+    <mat-radio-group aria-labelledby="filter-done-tasks" [(ngModel)]="selectedTasks" (change)="filterTaskByCompleted()">
+      <mat-radio-button class="filter__completed" value="all">All</mat-radio-button>
+      <mat-radio-button class="filter__completed" value="done">Done</mat-radio-button>
+      <mat-radio-button class="filter__completed" value="not-done">Not done</mat-radio-button>
+    </mat-radio-group>
+
+    <mat-chip-list class="filter__chip-list">
+      <mat-chip *ngIf="selectedAuthor" color="primary" selected> {{ selectedAuthor | titlecase}}
+        <mat-icon matChipRemove (click)="resetSelectedAuthor()">cancel</mat-icon>
+      </mat-chip>
+
+      <mat-chip *ngIf="selectedCreationDate" color="primary" selected> {{ selectedCreationDate | date:'longDate' }}
+        <mat-icon matChipRemove (click)="resetSelectedCreationDate()">cancel</mat-icon>
+      </mat-chip>
+
+      <mat-chip *ngIf="selectedDeadline" color="primary" selected> {{ selectedDeadline | date:'longDate' }}
+        <mat-icon matChipRemove (click)="resetSelectedDeadline()">cancel</mat-icon>
+      </mat-chip>
+    </mat-chip-list>
+  </div>
+
+  <app-list [searchValue]="searchValue" [searchFieldName]="searchFieldName"
+            [taskCompleted]="taskCompleted" [selectedAuthor]="selectedAuthor"
+            [selectedDeadline]="selectedDeadline" [selectedCreationDate]="selectedCreationDate">
+  </app-list>
+
+</div>

@@ -1,0 +1,65 @@
+@import "src/app/styles/variables";
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  &__header {
+    font-size: 16px;
+    padding: 20px 5px;
+    text-align: center;
+    font-weight: 500;
+
+    &:first-of-type {
+      padding-left: 20px;
+    }
+
+    &:last-of-type {
+      padding-right: 20px;
+    }
+  }
+
+  &__btn {
+    text-align: center;
+  }
+
+  &__deadline--red {
+    background-color: red;
+    font-weight: 500;
+    box-shadow: $mat-elevation-z8;
+    animation: pulsing 2s infinite;
+  }
+}
+
+tr {
+  &:hover {
+    cursor: pointer;
+    box-shadow: $mat-elevation-z8;
+  }
+
+  &:first-of-type {
+    box-shadow: $mat-elevation-z8;
+    background-color: #ffd740;
+  }
+}
+
+td {
+  padding: 10px 5px;
+  border-bottom: 1px solid rgba(0, 0, 0, .12);
+
+  &:first-of-type {
+    padding-left: 30px;
+  }
+}
+
+@keyframes pulsing {
+  0% {
+    transform: scale(1.0, 1.0);
+  }
+  50% {
+    transform: scale(0.90, 0.90);
+  }
+  100% {
+    transform: scale(1.0, 1.0);
+  }
+}
