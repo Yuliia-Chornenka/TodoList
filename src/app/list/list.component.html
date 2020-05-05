@@ -8,6 +8,8 @@
     <th class="table__header"> Delete </th>
   </tr>
 
+  <mat-spinner *ngIf="isDataLoading" class="table__spinner"></mat-spinner>
+
   <tr *ngFor="let item of sortedData
     | search:searchValue:searchFieldName
     | filter:selectedAuthor:'author'

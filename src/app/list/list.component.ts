@@ -17,6 +17,7 @@ export class ListComponent implements OnInit {
   columns: string[] = [ 'Done', 'Author', 'Title', 'Creation date', 'Deadline' ];
   todoList: IListItem[] = [];
   sortedData: IListItem[] = [];
+  isDataLoading = false;
 
   @Input() searchValue: string;
   @Input() searchFieldName: string;
@@ -52,10 +53,12 @@ export class ListComponent implements OnInit {
   }
 
   getList(): void {
+    this.isDataLoading = true;
     this.listService.getTodoList()
         .subscribe(items => {
           this.sortedData = items;
           this.todoList = items;
+          this.isDataLoading = false;
         });
   }
 
