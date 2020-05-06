@@ -84,7 +84,7 @@ export class ListComponent implements OnInit {
         case 'Done':
           return compare(a.completed, b.completed, isAsc);
         case 'Title':
-          return compare(a.title, b.title, isAsc);
+          return compare(a.title.toLowerCase(), b.title.toLowerCase(), isAsc);
         case 'Author':
           return compare(a.author, b.author, isAsc);
         case 'Creation date':
