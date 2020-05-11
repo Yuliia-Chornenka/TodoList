@@ -1,16 +1,24 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
 import { IListItem } from './list-item';
+import { AbstractControl } from '@angular/forms';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ListService {
+  private tasks$ = new BehaviorSubject<IListItem[]>([]);
 
-  constructor(private http: HttpClient) {}
+  todoListExist = localStorage.getItem('todoList');
+
+  constructor(private http: HttpClient) {
+    if (!this.todoListExist) {
+      localStorage.setItem('todoList', JSON.stringify([]));
+    }
+  }
 
   private listsUrl = 'https://jsonplaceholder.typicode.com/todos';
 
@@ -20,14 +28,41 @@ export class ListService {
     })
   };
 
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation: string = 'operation', result?: T) {
     return (error: any): Observable<T> => {
-      console.error(error);
+      console.error(`${operation} failed: ${error.message}`);
       return of(result as T);
     };
   }
 
-  addNewTodo(task: string, name: string, deadline: string): Observable<IListItem> {
+  getTodoListFromStorage(): Array<IListItem> {
+    return JSON.parse(localStorage.getItem('todoList'));
+  }
+
+  getTodoList(): Observable<IListItem[]> {
+    const todoListSavedLocally = this.getTodoListFromStorage();
+    return this.http.get<IListItem[]>(this.listsUrl)
+               .pipe(
+                 map((todoList: IListItem[]) => todoList.map(todoItem => {
+                     todoItem.author = `server ${todoItem.userId}`;
+                     todoItem.todoId = todoItem.id;
+                     todoItem.createdAt = new Date(2020, 3, todoItem.userId + 5).toISOString();
+                     todoItem.deadline = new Date(2020, 4, todoItem.userId + 5).toISOString();
+                     return todoItem;
+                   })
+                 ),
+                 tap((todoList) => {
+                   this.tasks$.next([ ...todoListSavedLocally, ...todoList ]);
+                 }),
+                 switchMap(() => this.tasks$.asObservable()),
+                 catchError(this.handleError<IListItem[]>('getTodoList', []))
+               );
+  }
+
+  addNewTodo(task: AbstractControl, name: AbstractControl, deadline: AbstractControl): Observable<IListItem> {
+    const today = new Date();
+    const creationDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
     const newTodo = {
       title: task,
       author: name,
@@ -35,71 +70,47 @@ export class ListService {
       completed: false,
       todoId: Date.now(),
       userId: Date.now() + 1,
-      createdAt: new Date().toISOString()
+      createdAt: creationDate.toISOString()
     };
 
     return this.http.post<IListItem>(this.listsUrl, newTodo, this.httpOptions)
                .pipe(
-                 map((item) => {
-                   const todoListExist = localStorage.getItem('todoList');
-                   if (todoListExist) {
-                     const savedList = JSON.parse(localStorage.getItem('todoList'));
-                     savedList.unshift(item);
-                     localStorage.setItem('todoList', JSON.stringify(savedList));
-                   } else {
-                     localStorage.setItem('todoList', JSON.stringify([ item ]));
-                   }
-                   return item;
+                 tap((todoItem: IListItem) => {
+                   const savedList = JSON.parse(localStorage.getItem('todoList'));
+                   savedList.unshift(todoItem);
+                   localStorage.setItem('todoList', JSON.stringify(savedList));
+                   const todoList = this.tasks$.getValue();
+                   this.tasks$.next([ todoItem, ...todoList ]);
+                   return todoItem;
                  }),
                  catchError(this.handleError<IListItem>('addNewTodo'))
                );
   }
 
-  getTodoListFromStorage() {
-    const todoListExist = localStorage.getItem('todoList');
-    if (todoListExist) {
-      return JSON.parse(localStorage.getItem('todoList'));
-    } else {
-      return [];
-    }
-  }
-
-  getTodoList(): Observable<IListItem[]> {
-    const todoListSavedLocally = this.getTodoListFromStorage();
-    return this.http.get<IListItem[]>(this.listsUrl)
-               .pipe(
-                 map((array) => array.map(element => {
-                     element.author = `server ${element.userId}`;
-                     element.todoId = element.id;
-                     element.createdAt = new Date(2020, 3, element.userId + 5).toISOString();
-                     element.deadline = new Date(2020, 4, element.userId + 5).toISOString();
-                     return element;
-                   })
-                 ),
-                 map(array => [ ...todoListSavedLocally, ...array ]),
-                 catchError(this.handleError<IListItem[]>('getLists', []))
-               );
-  }
-
   deleteTodo(id: number): Observable<IListItem> {
+    const todoList = this.tasks$.getValue();
+    const todoToDeleteIndex = todoList.findIndex((todoItem: IListItem) => todoItem.todoId === id);
+    if (todoToDeleteIndex >= 0) {
+      todoList.splice(todoToDeleteIndex, 1);
+    }
+
     if (id <= 200) {
       const url = `${this.listsUrl}/${id}`;
       return this.http.delete<IListItem>(url, this.httpOptions).pipe(
+        tap(() => {
+          this.tasks$.next([ ...todoList ]);
+        }),
         catchError(this.handleError<IListItem>('deleteTodo'))
       );
     } else {
       const savedList = JSON.parse(localStorage.getItem('todoList'));
-      savedList.find((element: IListItem, index: number) => {
-        if (element && element.todoId === id) {
-          savedList.splice(index, 1);
-        }
-      });
-      if (savedList.length) {
-        localStorage.setItem('todoList', JSON.stringify(savedList));
-      } else {
-        localStorage.removeItem('todoList');
+      const todoItemToDeleteIndex = savedList.findIndex((todoItem: IListItem) => todoItem.todoId === id);
+      if (todoItemToDeleteIndex >= 0) {
+        savedList.splice(todoItemToDeleteIndex, 1);
       }
-      return of (savedList);
+      localStorage.setItem('todoList', JSON.stringify(savedList));
+      this.tasks$.next([ ...todoList ]);
+      return of(savedList);
     }
   }
 
@@ -111,37 +122,45 @@ export class ListService {
       );
     } else {
       const savedList = JSON.parse(localStorage.getItem('todoList'));
-      savedList.find((element: IListItem) => {
-        if (element && element.todoId === todo.todoId) {
-          element.completed = todo.completed;
-        }
-      });
+      const checkedItem = savedList.find((todoItem: IListItem) => todoItem.todoId === todo.todoId);
+      if (checkedItem) {
+        checkedItem.completed = todo.completed;
+      }
       localStorage.setItem('todoList', JSON.stringify(savedList));
       return of(todo);
     }
   }
 
+  updateTodo(todoId: AbstractControl, task: AbstractControl, deadline: AbstractControl): Observable<IListItem> {
+    const todoList = this.tasks$.getValue();
+    const todoToUpdate = todoList.find((todoItem: IListItem) => todoItem.todoId === +todoId);
+    if (todoToUpdate) {
+      todoToUpdate.title = task.toString();
+      todoToUpdate.deadline = new Date(deadline.toString()).toISOString();
+    }
 
-  updateTodo(todoId, task, deadline): Observable<IListItem> {
     const dataToUpdate = JSON.stringify({
       title: task,
       deadline
     });
 
-    if (todoId <= 200) {
+    if (+todoId <= 200) {
       const url = `${this.listsUrl}/${todoId}`;
       return this.http.patch(url, dataToUpdate, this.httpOptions).pipe(
-        catchError(this.handleError<any>('checkTodo'))
+        tap(() => {
+          this.tasks$.next([ ...todoList ]);
+        }),
+        catchError(this.handleError<any>('updateTodo')),
       );
     } else {
       const savedList = JSON.parse(localStorage.getItem('todoList'));
-      savedList.find((item: IListItem) => {
-        if (item && item.todoId === todoId) {
-          item.title = task;
-          item.deadline = deadline;
-        }
-      });
+      const itemToUpdate = savedList.find((todoItem: IListItem) => todoItem.todoId === +todoId);
+      if (itemToUpdate) {
+        itemToUpdate.title = task.toString();
+        itemToUpdate.deadline = deadline;
+      }
       localStorage.setItem('todoList', JSON.stringify(savedList));
+      this.tasks$.next([ ...todoList ]);
       return of(savedList);
     }
   }

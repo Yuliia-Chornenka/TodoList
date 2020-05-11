@@ -19,7 +19,7 @@ import { SearchPipe } from './search.pipe';
 import { MatRadioModule } from '@angular/material/radio';
 import { FilterPipe } from './filter.pipe';
 import { MatDialogModule } from '@angular/material/dialog';
-import { ModalWindowAddEditTodoComponent } from './modal-window-add-edit-todo/modal-window-add-edit-todo.component';
+import { EditTodoPopupComponent } from './edit-todo-popup/edit-todo-popup.component';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -34,7 +34,7 @@ import { MainPageComponent } from './main-page/main-page.component';
     ListComponent,
     SearchPipe,
     FilterPipe,
-    ModalWindowAddEditTodoComponent,
+    EditTodoPopupComponent,
     MainPageComponent
   ],
   imports: [

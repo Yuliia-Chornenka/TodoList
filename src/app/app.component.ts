@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 
-import { ModalWindowAddEditTodoComponent } from './modal-window-add-edit-todo/modal-window-add-edit-todo.component';
+import { EditTodoPopupComponent } from './edit-todo-popup/edit-todo-popup.component';
 
 @Component({
   selector: 'app-root',
@@ -14,7 +14,7 @@ export class AppComponent {
   constructor(public dialog: MatDialog) {}
 
   openDialogNewTodo() {
-    this.dialog.open(ModalWindowAddEditTodoComponent, {
+    this.dialog.open(EditTodoPopupComponent, {
       data: {
         title: '',
         deadline: '',

@@ -16,3 +16,8 @@ body {
   padding: 50px 5%;
   margin: 0 auto;
 }
+
+::selection {
+  background-color: #673ab7;
+  color: white;
+}

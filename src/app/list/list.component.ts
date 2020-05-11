@@ -1,23 +1,26 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Sort } from '@angular/material/sort';
 
 import { ListService } from '../list.service';
 import { IListItem } from '../list-item';
-import { ModalWindowAddEditTodoComponent } from '../modal-window-add-edit-todo/modal-window-add-edit-todo.component';
+import { EditTodoPopupComponent } from '../edit-todo-popup/edit-todo-popup.component';
 import { MatDialog } from '@angular/material/dialog';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-list',
   templateUrl: './list.component.html',
   styleUrls: [ './list.component.scss' ]
 })
-export class ListComponent implements OnInit {
+export class ListComponent implements OnInit, OnDestroy {
 
   today = new Date().toISOString();
   columns: string[] = [ 'Done', 'Author', 'Title', 'Creation date', 'Deadline' ];
   todoList: IListItem[] = [];
   sortedData: IListItem[] = [];
   isDataLoading = false;
+
+  subscriptions: Subscription = new Subscription();
 
   @Input() searchValue: string;
   @Input() searchFieldName: string;
@@ -34,8 +37,12 @@ export class ListComponent implements OnInit {
     this.getList();
   }
 
-  openDialogEditTodo(title, deadline, author, todoId) {
-    this.dialog.open(ModalWindowAddEditTodoComponent, {
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+  }
+
+  openDialogEditTodo(title: string, deadline: string, author: string, todoId: number): void {
+    this.dialog.open(EditTodoPopupComponent, {
       data: {
         title,
         deadline,
@@ -46,7 +53,7 @@ export class ListComponent implements OnInit {
     });
   }
 
-  getDaysToDeadline(dayOne, dayTwo) {
+  getDaysToDeadline(dayOne: string, dayTwo: string): number {
     const firstDate: any = new Date(dayOne);
     const secondDate: any = new Date(dayTwo);
     return (secondDate - firstDate) / (60 * 60 * 24 * 1000);
@@ -54,31 +61,30 @@ export class ListComponent implements OnInit {
 
   getList(): void {
     this.isDataLoading = true;
-    this.listService.getTodoList()
+    this.subscriptions.add(this.listService.getTodoList()
         .subscribe(items => {
           this.sortedData = items;
           this.todoList = items;
           this.isDataLoading = false;
-        });
+        }));
   }
 
   deleteTodo(id: number): void {
-    this.sortedData = this.sortedData.filter(todo => todo.todoId !== id);
-    this.listService.deleteTodo(id).subscribe();
+    this.subscriptions.add(this.listService.deleteTodo(id).subscribe());
   }
 
   checkTodo(todo: IListItem): void {
-    this.listService.checkTodo(todo).subscribe();
+    this.subscriptions.add(this.listService.checkTodo(todo).subscribe());
   }
 
-  sortData(sort: Sort) {
+  sortData(sort: Sort): string {
     const data = this.todoList.slice();
     if (!sort.active || sort.direction === '') {
       this.sortedData = data;
       return;
     }
 
-    this.sortedData = data.sort((a, b) => {
+    this.sortedData = data.sort((a: IListItem, b: IListItem) => {
       const isAsc = sort.direction === 'asc';
       switch (sort.active) {
         case 'Done':
@@ -98,6 +104,6 @@ export class ListComponent implements OnInit {
   }
 }
 
-function compare(a: number | string | boolean, b: number | string | boolean, isAsc: boolean) {
+function compare(a: number | string | boolean, b: number | string | boolean, isAsc: boolean): number {
   return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
 }

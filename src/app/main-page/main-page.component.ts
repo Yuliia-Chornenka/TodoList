@@ -1,20 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 
 import { ListService } from '../list.service';
 import { IListItem } from '../list-item';
+import { TaskStates } from './task-states.enum';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-main-page',
   templateUrl: './main-page.component.html',
   styleUrls: [ './main-page.component.scss' ]
 })
-export class MainPageComponent implements OnInit {
+export class MainPageComponent implements OnInit, OnDestroy {
 
   searchValue = '';
   searchFieldName = 'title';
   searchedFields = [ 'title', 'author' ];
 
-  selectedTasks = 'all';
+  selectedTasks = TaskStates.All;
   taskCompleted: boolean | string = '';
 
   selectedAuthor = '';
@@ -26,14 +28,21 @@ export class MainPageComponent implements OnInit {
   selectedCreationDate = '';
   creationDates: string[] = [];
 
-  constructor(private listService: ListService) {}
+  subscriptions: Subscription = new Subscription();
+
+  constructor(private listService: ListService) {
+  }
 
   ngOnInit(): void {
     this.getList();
   }
 
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+  }
+
   getList(): void {
-    this.listService.getTodoList()
+    this.subscriptions.add(this.listService.getTodoList()
         .subscribe(items => {
           items.forEach((todo: IListItem) => {
             if (!this.authors.includes(todo.author)) {
@@ -51,18 +60,18 @@ export class MainPageComponent implements OnInit {
               this.creationDates.sort();
             }
           });
-        });
+    }));
   }
 
-  filterTaskByCompleted() {
+  filterTaskByCompleted(): void {
     switch (this.selectedTasks) {
-      case 'done':
+      case TaskStates.Done:
         this.taskCompleted = true;
         break;
-      case 'not-done':
+      case TaskStates.NotDone:
         this.taskCompleted = false;
         break;
-      case 'all':
+      case TaskStates.All:
         this.taskCompleted = '';
         break;
       default:
@@ -94,6 +103,6 @@ export class MainPageComponent implements OnInit {
     this.selectedDeadline = '';
     this.selectedCreationDate = '';
     this.taskCompleted = '';
-    this.selectedTasks = 'all';
+    this.selectedTasks = TaskStates.All;
   }
 }
